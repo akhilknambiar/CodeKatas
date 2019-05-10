@@ -16,16 +16,6 @@
 
 package bnymellon.codekatas.calendarkata;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.Month;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.TimeZone;
-
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.block.function.Function2;
 import org.eclipse.collections.api.block.predicate.Predicate2;
@@ -35,6 +25,10 @@ import org.eclipse.collections.api.set.sorted.SortedSetIterable;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.Multimaps;
 import org.threeten.extra.Interval;
+
+import java.time.*;
+import java.util.TimeZone;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class MyCalendar
 {
@@ -93,7 +87,11 @@ public class MyCalendar
      */
     public boolean hasOverlappingMeeting(LocalDate date, LocalTime startTime, Duration duration)
     {
-        return false;
+        Instant startInstant = date.atTime(startTime).atZone(getZoneId()).toInstant();
+        Interval interval = Interval.of(startInstant, duration);
+
+        return getMeetingsForDate(date).anySatisfy(meeting -> meeting.getInterval().overlaps(interval));
+
     }
 
     /**
@@ -109,7 +107,21 @@ public class MyCalendar
      */
     public MutableList<Interval> getAvailableTimeslots(LocalDate date)
     {
-        return Lists.mutable.empty();
+
+        MutableList<Interval> intervals = Lists.mutable.empty();
+
+        AtomicReference<Instant> startInstant = new AtomicReference<>(date.atStartOfDay().atZone(getZoneId()).toInstant());
+        getMeetingsForDate(date).forEach(meeting -> {
+            Instant endInstant = meeting.getInterval().getStart();
+            intervals.add(Interval.of(startInstant.get(), endInstant));
+            startInstant.set(meeting.getInterval().getEnd());
+
+        });
+        Instant endInstant = date.atTime(LocalTime.MAX).atZone(getZoneId()).toInstant();
+        intervals.add(Interval.of(startInstant.get(), endInstant));
+
+        return intervals;
+
     }
 
     @Override

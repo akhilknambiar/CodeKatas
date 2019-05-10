@@ -16,13 +16,7 @@
 
 package bnymellon.codekatas.deckofcards.list.immutable;
 
-import java.util.Collections;
-import java.util.Deque;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -47,15 +41,27 @@ public class JDK8DeckOfCardsAsList
      */
     public JDK8DeckOfCardsAsList()
     {
-        this.cards = null;
-        this.cardsBySuit = null;
+        this.cards = Card.streamCards().sorted().collect(Collectors.toUnmodifiableList());
+
+        this.cardsBySuit = cards.stream().collect(
+                Collectors.collectingAndThen(Collectors.groupingBy(Card::getSuit, Collectors.toUnmodifiableList()) ,
+                        Collections::unmodifiableMap)
+        );
+
+
+
     }
 
     public Deque<Card> shuffle(Random random)
     {
         // TODO Shuffle the deck 3 times with the Random parameter and push the shuffled cards onto an ArrayDeque
         // Hint: Look at IntStream.range() or IntStream.rangeClosed() and Collections.shuffle().
-        return null;
+        var shuffled = new ArrayList<>(this.cards);
+        IntStream.range(0,3).boxed().forEach( (int1) -> Collections.shuffle(shuffled,random));
+        var deck = new ArrayDeque<Card>();
+        shuffled.forEach(card -> deck.push(card));
+        return deck;
+
     }
 
     public Set<Card> deal(Deque<Card> deque, int count)
@@ -74,45 +80,43 @@ public class JDK8DeckOfCardsAsList
     public List<Set<Card>> dealHands(Deque<Card> shuffled, int hands, int cardsPerHand)
     {
         // TODO Deal the number of hands with the cardsPerHand into an "immutable" List<Set<Card>>
-        return null;
+        var result = new ArrayList<Set<Card>>();
+        IntStream.range(0, hands).boxed().forEach((n) -> result.add(this.deal(shuffled, cardsPerHand)));
+        return List.copyOf(result);
     }
 
     public List<Card> diamonds()
     {
-        // TODO return all diamonds as an "Immutable" List
-        return null;
+        return this.cardsBySuit.get(Suit.DIAMONDS);
     }
 
     public List<Card> hearts()
     {
-        // TODO return all hearts as an "Immutable" List
-        return null;
+        return this.cardsBySuit.get(Suit.HEARTS);
     }
 
     public List<Card> spades()
     {
-        // TODO return all spades as an "Immutable" List
-        return null;
+        return this.cardsBySuit.get(Suit.SPADES);
     }
 
     public List<Card> clubs()
     {
-        // TODO return all clubs as an "Immutable" List
-        return null;
+        return this.cardsBySuit.get(Suit.CLUBS);
     }
 
     public Map<Suit, Long> countsBySuit()
     {
         // TODO return the count of cards by Suit
         // Hint: Look at Collectors.groupingBy() and Collectors.counting()
-        return null;
+        return cards.stream().collect(Collectors.groupingBy(Card::getSuit, Collectors.counting()));
     }
 
     public Map<Rank, Long> countsByRank()
     {
         // TODO return the count of cards by Rank
         // Hint: Look at Collectors.groupingBy() and Collectors.counting()
-        return null;
+        return cards.stream().collect(Collectors.groupingBy(Card::getRank, Collectors.counting()));
     }
 
     public List<Card> getCards()

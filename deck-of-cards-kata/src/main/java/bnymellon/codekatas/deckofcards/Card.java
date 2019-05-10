@@ -64,7 +64,19 @@ public class Card implements Comparable<Card>
     {
         // TODO Implement Cartesian Product using Java 8 Streams
         // Hint: Check out flatMap() and map() on Stream
-        return Card.imperativeCartesianProductOfCards(set1, set2, function).stream();
+        //return Card.imperativeCartesianProductOfCards(set1, set2, function).stream();
+        var result = new ArrayList<C>();
+        set1.stream().forEach(
+                first ->
+                    set2.forEach(
+                            second ->
+                                result.add(function.value(first, second))
+
+                    )
+
+        );
+        return result.stream();
+
     }
 
     @Deprecated
