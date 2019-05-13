@@ -25,6 +25,7 @@ import java.time.Month;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.TimeZone;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.block.function.Function2;
@@ -93,7 +94,11 @@ public class MyCalendar
      */
     public boolean hasOverlappingMeeting(LocalDate date, LocalTime startTime, Duration duration)
     {
-        return false;
+
+        Instant startTimeInstant = date.atTime(startTime).atZone(getZoneId()).toInstant();
+        Interval interval = Interval.of(startTimeInstant, duration);
+
+        return getMeetingsForDate(date).collect(Meeting::getInterval).anySatisfy(interval::overlaps) ;
     }
 
     /**
@@ -109,7 +114,15 @@ public class MyCalendar
      */
     public MutableList<Interval> getAvailableTimeslots(LocalDate date)
     {
-        return Lists.mutable.empty();
+
+        MutableList<Interval> intervals = Lists.mutable.empty();
+        AtomicReference<Instant> startTime = new AtomicReference<>(date.atStartOfDay().atZone(getZoneId()).toInstant());
+        getMeetingsForDate(date).forEach(meeting -> {
+            intervals.add(Interval.of(startTime.get(), meeting.getInterval().getStart()));
+            startTime.set(meeting.getInterval().getEnd());
+        });
+        intervals.add(Interval.of(startTime.get(), date.atTime(LocalTime.MAX).atZone(getZoneId()).toInstant()));
+        return intervals;
     }
 
     @Override

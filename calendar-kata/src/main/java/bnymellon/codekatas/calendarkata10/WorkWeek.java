@@ -18,6 +18,7 @@ package bnymellon.codekatas.calendarkata10;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
 
@@ -37,8 +38,8 @@ public class WorkWeek extends CalendarWindow
      */
     public WorkWeek(LocalDate forDate, SortedSetMultimap<LocalDate, Meeting> calendarMeetings)
     {
-        LocalDate start = null;
-        this.range = null;
+        LocalDate start = forDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        this.range = LocalDateRange.of(start, Period.ofDays(5));
         this.meetings = calendarMeetings.selectKeysValues((date, meeting) -> this.range.contains(date));
     }
 
